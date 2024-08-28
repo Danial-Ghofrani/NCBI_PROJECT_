@@ -21,9 +21,9 @@ def create_table_and_insert_data(folder_paths):
         connection = mysql.connector.connect(
             host='localhost',
             user='root',
-            password='mrnd181375',
+            password='root123',
         )
-
+        # todo: the database informations should only be gotten once in <<main>> part!
         if connection.is_connected():
             cursor = connection.cursor()
             cursor.execute("CREATE DATABASE IF NOT EXISTS WGS")
@@ -91,6 +91,6 @@ def create_table_and_insert_data(folder_paths):
 
 
 # Main function
-gene_sample_path = r'C:\Users\mrnaj\OneDrive\Desktop\genes sample'
-genome_sample_path = r'C:\Users\mrnaj\OneDrive\Desktop\whole_genome'
+gene_sample_path = r'C:\Users\Danial\Desktop\genes'
+genome_sample_path = r'C:\Users\Danial\Desktop\wgs'
 create_table_and_insert_data([gene_sample_path, genome_sample_path])

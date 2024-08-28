@@ -12,7 +12,7 @@ start_time = datetime.now()
 db_info = {
     'host': 'localhost',
     'user': 'root',
-    'password' : 'root123',
+    'password': 'root123',
     'database': 'wgs'
 }
 

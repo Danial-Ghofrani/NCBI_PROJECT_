@@ -106,7 +106,7 @@ db_info = {
     'database': 'wgs'
 }
 
-output_dir = 'C://Users//mrnaj//PycharmProjects//NCBI_project_2//concatenate//result'
+output_dir = r'D:\programming\NCBI_PROJECT_\concatenate'
 
 concatenate = Concatenate(db_info, output_dir)
 concatenate.process_concatenation()
