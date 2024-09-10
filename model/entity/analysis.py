@@ -30,7 +30,8 @@ class Analysis:
             duplicate_count INT,
             duplicate_percentage FLOAT,
             diversity_count INT,
-            diversity_percentage FLOAT
+            diversity_percentage FLOAT,
+            distinct_gene_presence_count FLOAT
             
         )
         """
@@ -71,16 +72,24 @@ class Analysis:
             cutoff_percentage = 0
             gene_presence_count = 0
             gene_presence_percentage = 0
+            distinct_gene_presence_count = 0
+
             if has_cutoff:
                 cutoff_query = f"SELECT COUNT(*) FROM {table_name} WHERE cutoff = 1"
                 cursor.execute(cutoff_query)
                 gene_presence_count = cursor.fetchone()[0]
+
+                # New variable to count distinct genomes for percentage calculation
+                distinct_gene_presence_query = f"SELECT COUNT(DISTINCT genome_name) FROM {table_name} WHERE cutoff = 1"
+                cursor.execute(distinct_gene_presence_query)
+                distinct_gene_presence_count = cursor.fetchone()[0]
+
                 cutoff_count = (total_blast_query_count - gene_presence_count)
                 if total_blast_query_count == 0:
                     continue
                 else:
                     cutoff_percentage = (cutoff_count / total_blast_query_count) * 100 if total_count else 0
-                    gene_presence_percentage = (gene_presence_count / total_count) * 100 if total_count else 0
+                    gene_presence_percentage = (distinct_gene_presence_count / total_count) * 100 if total_count else 0
 
             duplicate_count = 0
             duplicate_percentage = 0
@@ -97,28 +106,28 @@ class Analysis:
                     duplicate_percentage = (duplicate_count / gene_presence_count) * 100 if total_count else 0
                     diversity_percentage = (diversity_count / gene_presence_count) * 100 if total_count else 0
 
+                # Insert or update analysis results in gene_analysis table
+                insert_query = """
+                INSERT INTO gene_analysis (gene_name, cutoff_count, cutoff_percentage, duplicate_count, duplicate_percentage, gene_presence_count, gene_presence_percentage, diversity_count, diversity_percentage, distinct_gene_presence_count)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                cutoff_count = VALUES(cutoff_count),
+                cutoff_percentage = VALUES(cutoff_percentage),
+                duplicate_count = VALUES(duplicate_count),
+                duplicate_percentage = VALUES(duplicate_percentage),
+                gene_presence_count = VALUES(gene_presence_count),
+                gene_presence_percentage = VALUES(gene_presence_percentage),
+                diversity_count = VALUES(diversity_count),
+                diversity_percentage = VALUES(diversity_percentage),
+                distinct_gene_presence_count = VALUES(distinct_gene_presence_count)
+                """
+                cursor.execute(insert_query, (
+                table_name, cutoff_count, cutoff_percentage, duplicate_count, duplicate_percentage, gene_presence_count,
+                gene_presence_percentage, diversity_count, diversity_percentage, distinct_gene_presence_count))
+                self.mydb.commit()
 
-
-
-            # Insert or update analysis results in gene_analysis table
-            insert_query = """
-            INSERT INTO gene_analysis (gene_name, cutoff_count, cutoff_percentage, duplicate_count, duplicate_percentage, gene_presence_count, gene_presence_percentage, diversity_count, diversity_percentage)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-            cutoff_count = VALUES(cutoff_count),
-            cutoff_percentage = VALUES(cutoff_percentage),
-            duplicate_count = VALUES(duplicate_count),
-            duplicate_percentage = VALUES(duplicate_percentage),
-            gene_presence_count = VALUES(gene_presence_count),
-            gene_presence_percentage = VALUES(gene_presence_percentage),
-            diversity_count = VALUES(diversity_count),
-            diversity_percentage = VALUES(diversity_percentage)
-            """
-            cursor.execute(insert_query, (table_name, cutoff_count, cutoff_percentage, duplicate_count, duplicate_percentage, gene_presence_count, gene_presence_percentage, diversity_count, diversity_percentage))
-            self.mydb.commit()
-
-        cursor.close()
-        print("Analysis complete.")
+            cursor.close()
+            print("Analysis complete.")
 
     def export_to_excel(self, table_names, output_files):
         cursor = self.mydb.cursor()
