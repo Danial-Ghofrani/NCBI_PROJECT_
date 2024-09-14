@@ -96,6 +96,9 @@ class DB:
 
             if len(parts) == 2:
                 genome_name, original_query_id = parts
+                if '.fas' in genome_name:
+                    genome_name = genome_name.split('.fas')[0].strip()  # Remove any leading/trailing whitespace
+                    original_query_id = original_query_id.strip()
             elif len(parts) > 2:
                 genome_name = parts[0]
                 original_query_id = parts[2]
