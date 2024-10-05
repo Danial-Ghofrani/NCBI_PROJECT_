@@ -1,60 +1,101 @@
-import os
 import subprocess
-from Bio import AlignIO, Phylo
-from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
+import os
+from pathlib import Path
 
-# Paths to your directories
-concatenated_dir = "D:\\programming\\NCBI_PROJECT_\\concatenate"
-output_dir = "D:\\programming\\NCBI_PROJECT_\\phylogeny"
+# Define paths
+mafft_path = r"C:\Users\mrnaj\PycharmProjects\MAFFT\mafft-7.526-win64-signed\mafft-win\mafft.bat"
+iqtree_path = r"C:\Users\mrnaj\PycharmProjects\iqtree-2.2.0-Windows\iqtree2.exe"
+input_dir = r"C:\Users\mrnaj\PycharmProjects\NCBI_project_2\concatenate\result"
+output_dir = r"C:\Users\mrnaj\PycharmProjects\NCBI_project_2\concatenate\phylogeny"
 
-# Ensure output directory exists
+# Create the output directory if it doesn't exist
 os.makedirs(output_dir, exist_ok=True)
 
-# Path to the MAFFT executable
-mafft_path = r"D:\apps\MAFFT\mafft-win\mafft.bat"  # Replace with the actual path to your MAFFT executable
+# Ensure the current working directory is set correctly
+os.chdir(r"C:\Users\mrnaj\PycharmProjects\MAFFT\mafft-7.526-win64-signed\mafft-win")
 
-# Step 1: Collect all concatenated FASTA files
-fasta_files = [f for f in os.listdir(concatenated_dir) if f.endswith('.fasta')]
+def run_mafft(input_file_path, output_file_path):
+    command = [mafft_path, '--auto', input_file_path]
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        with open(output_file_path, 'w') as aligned_file:
+            aligned_file.write(result.stdout)
+        if result.stderr:
+            print(f"MAFFT error for {input_file_path}: {result.stderr}")
+        else:
+            print(f"MAFFT successfully aligned {input_file_path}.")
+        if os.path.getsize(output_file_path) == 0:
+            print(f"Warning: {output_file_path} is empty. Check if the input file has valid sequences.")
+            with open(input_file_path, 'r') as file:
+                print(file.read())
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while running MAFFT on {input_file_path}:")
+        print("Return code:", e.returncode)
+        print("Error output:", e.stderr)
+    except Exception as ex:
+        print(f"An unexpected error occurred with file {input_file_path}: {ex}")
 
-# Initialize a list to store the aligned sequences
-aligned_files = []
+def rename_sequences_in_fasta(fasta_path):
+    """Rename sequences in a FASTA file to simple names like seq1, seq2, etc."""
+    renamed_path = fasta_path.replace('.fasta', '_renamed.fasta')
+    with open(fasta_path, 'r') as original, open(renamed_path, 'w') as renamed:
+        seq_count = 1
+        for line in original:
+            if line.startswith('>'):
+                line = f">seq{seq_count}\n"
+                seq_count += 1
+            renamed.write(line)
+    return renamed_path
 
-# Step 2: Perform Multiple Sequence Alignment (MSA) on each file
-for fasta_file in fasta_files:
-    input_path = os.path.join(concatenated_dir, fasta_file)
-    output_path = os.path.join(output_dir, f"aligned_{fasta_file}")
+def clean_alignment(aligned_file_path):
+    """Use trimAl or other alignment tools to clean the alignment file."""
+    cleaned_file_path = aligned_file_path.replace('.fasta', '_cleaned.fasta')
+    command = ['trimal', '-in', aligned_file_path, '-out', cleaned_file_path, '-automated1']
+    try:
+        subprocess.run(command, check=True)
+        print(f"Alignment cleaned: {cleaned_file_path}")
+        return cleaned_file_path
+    except FileNotFoundError:
+        print("trimAl is not installed or not found in PATH. Please install trimAl or clean the alignment manually.")
+        return aligned_file_path
+    except Exception as ex:
+        print(f"An error occurred while cleaning the alignment: {ex}")
+        return aligned_file_path
 
-    # Perform alignment using MAFFT
-    result = subprocess.run([mafft_path, "--auto", input_path], capture_output=True, text=True)
-    stdout = result.stdout
+def run_iqtree(aligned_file_path, sequence_type="DNA"):
+    renamed_file_path = rename_sequences_in_fasta(aligned_file_path)  # Rename sequences
+    cleaned_file_path = clean_alignment(renamed_file_path)  # Clean the alignment
+    command = [iqtree_path, '-s', cleaned_file_path, '-st', sequence_type, '-nt', 'AUTO']
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        if result.stderr:
+            print(f"IQ-TREE error for {aligned_file_path}: {result.stderr}")
+        else:
+            print(f"IQ-TREE successfully constructed the tree for {aligned_file_path}.")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while running IQ-TREE on {aligned_file_path}:")
+        print("Return code:", e.returncode)
+        print("Error output:", e.stderr)
+    except Exception as ex:
+        print(f"An unexpected error occurred with file {aligned_file_path}: {ex}")
 
-    with open(output_path, "w") as aligned_file:
-        aligned_file.write(stdout)
+# Process each .fasta file in the input directory
+for input_file in Path(input_dir).glob("*.fasta"):
+    input_file_path = str(input_file)
+    aligned_file_path = os.path.join(output_dir, f"aligned_{input_file.stem}.fasta")
+    run_mafft(input_file_path, aligned_file_path)  # Run MAFFT for alignment
+    run_iqtree(aligned_file_path, sequence_type="DNA")  # Run IQ-TREE on the aligned file
 
-    aligned_files.append(output_path)
-
-# Step 3: Combine all aligned sequences into a single alignment
-combined_alignment_path = os.path.join(output_dir, "combined_alignment.fasta")
-
-with open(combined_alignment_path, "w") as outfile:
-    for aligned_file in aligned_files:
-        with open(aligned_file, "r") as infile:
-            outfile.write(infile.read())
-
-# Step 4: Load the combined alignment
-alignment = AlignIO.read(combined_alignment_path, "fasta")
-
-# Step 5: Calculate the distance matrix
-calculator = DistanceCalculator('identity')
-distance_matrix = calculator.get_distance(alignment)
-
-# Step 6: Construct the phylogenetic tree using the distance matrix
-constructor = DistanceTreeConstructor()
-tree = constructor.nj(distance_matrix)
-
-# Step 7: Save and visualize the tree
-tree_output_path = os.path.join(output_dir, "phylogenetic_tree.xml")
-Phylo.write(tree, tree_output_path, "phyloxml")
-
-# Optional: Visualize the tree using matplotlib
-Phylo.draw(tree)
+print("Phylogenetic tree construction is complete.")

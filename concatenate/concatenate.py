@@ -102,11 +102,11 @@ class Concatenate:
 db_info = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'root123',
+    'password': 'mrnd181375',
     'database': 'wgs'
 }
 
-output_dir = r'D:\programming\NCBI_PROJECT_\concatenate'
+output_dir = 'C://Users//mrnaj//PycharmProjects//NCBI_project_2//concatenate//result'
 
 concatenate = Concatenate(db_info, output_dir)
 concatenate.process_concatenation()

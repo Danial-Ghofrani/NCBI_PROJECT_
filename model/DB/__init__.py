@@ -14,6 +14,7 @@ def get_files(folder_path):
             file_details.append((name, file_path, file))
     return file_details
 
+
 # Function to connect to MySQL and create table
 def create_table_and_insert_data(folder_paths):
     try:
@@ -23,7 +24,7 @@ def create_table_and_insert_data(folder_paths):
             user='root',
             password='root123',
         )
-        # todo: the database informations should only be gotten once in <<main>> part!
+
         if connection.is_connected():
             cursor = connection.cursor()
             cursor.execute("CREATE DATABASE IF NOT EXISTS WGS")
@@ -91,6 +92,6 @@ def create_table_and_insert_data(folder_paths):
 
 
 # Main function
-gene_sample_path = r'C:\Users\Danial\Desktop\genes'
-genome_sample_path = r'C:\Users\Danial\Desktop\wgs'
+gene_sample_path = r'C:\Users\mrnaj\OneDrive\Desktop\genes sample'
+genome_sample_path = r'C:\Users\mrnaj\OneDrive\Desktop\whole_genome'
 create_table_and_insert_data([gene_sample_path, genome_sample_path])
