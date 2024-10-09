@@ -92,6 +92,6 @@ def create_table_and_insert_data(folder_paths):
 
 
 # Main function
-gene_sample_path = r'C:\Users\mrnaj\OneDrive\Desktop\genes sample'
-genome_sample_path = r'C:\Users\mrnaj\OneDrive\Desktop\whole_genome'
+gene_sample_path = r'C:\Users\Danial\Desktop\genes'
+genome_sample_path = r'C:\Users\Danial\Desktop\wgs'
 create_table_and_insert_data([gene_sample_path, genome_sample_path])
