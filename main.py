@@ -4,6 +4,7 @@ from model.entity.blast_model import BLAST
 from model.entity.duplicate import *
 from model.entity.analysis import *
 import time
+from model.entity.format_checker import *
 
 
 start_time = datetime.now()

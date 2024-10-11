@@ -1,6 +1,7 @@
 import os
 import mysql.connector
 from mysql.connector import Error
+import re
 
 
 # Function to get file details
@@ -13,6 +14,68 @@ def get_files(folder_path):
             file_path = os.path.join(root, file)
             file_details.append((name, file_path, file))
     return file_details
+
+
+
+def process_files_to_fasta(folder_path):
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+
+        # Read the file content
+        with open(file_path, "r") as file:
+            file_content = file.read()
+
+        # Preprocess the filename to remove unwanted characters and ensure it ends with .fasta
+        base_name, ext = os.path.splitext(filename)
+        new_base_name = re.sub(r'[^A-Za-z0-9_]', '_', base_name)
+        new_filename = new_base_name + ".fasta"
+        new_file_path = os.path.join(folder_path, new_filename)
+
+        # Rename the file if the name has changed
+        if new_filename != filename:
+            os.rename(file_path, new_file_path)
+            print(f"Renamed file: {filename} to {new_filename}")
+
+
+
+
+
+def clean_fasta_sequence(folder_path):
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".fasta"):
+            file_path = os.path.join(folder_path, filename)
+            print(f"Processing file: {file_path}")  # Debugging line
+            with open(file_path, "r") as file:
+                fasta_string = file.read()
+
+            lines = fasta_string.strip().split("\n")
+
+            headers = []
+            sequence = []
+
+            for line in lines:
+                if ">" in line:
+                    # Remove anything before '>' and strip the line
+                    clean_header = line[line.find(">"):].strip()
+                    headers.append(clean_header)
+                else:
+                    sequence.append(line)
+
+            sequence = "".join(sequence).upper()
+
+            if not re.match("^[ATCGN]*$", sequence):
+                print(f"Invalid FASTA format in {file_path}: Sequence contains invalid characters")
+
+            corrected_sequence = re.sub("[^ATCGN]", "", sequence)
+
+            corrected_fasta = "\n".join(headers) + "\n" + corrected_sequence
+
+            # Save the cleaned sequence back to the file
+            with open(file_path, "w") as file:
+                file.write(corrected_fasta)
+
+            print(f"Cleaned sequence saved to {file_path}")
+
 
 
 # Function to connect to MySQL and create table
@@ -94,4 +157,10 @@ def create_table_and_insert_data(folder_paths):
 # Main function
 gene_sample_path = r'C:\Users\Danial\Desktop\genes'
 genome_sample_path = r'C:\Users\Danial\Desktop\wgs'
+
+process_files_to_fasta(gene_sample_path)
+process_files_to_fasta(genome_sample_path)
+clean_fasta_sequence(gene_sample_path)
+# clean_fasta_sequence(genome_sample_path)
+
 create_table_and_insert_data([gene_sample_path, genome_sample_path])
