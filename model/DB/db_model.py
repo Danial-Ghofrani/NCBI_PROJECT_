@@ -104,11 +104,10 @@ class DB:
                 print(f"Unexpected format in query_id: {query_id}")
                 continue
 
-            qseq_path = f"{self.gene}_qseq_{idx}.fasta"
-            sseq_path = f"{self.gene}_sseq_{idx}.fasta"
+            # Include genome_name in the file names
+            qseq_path = os.path.join(folder_path, f"{self.gene}_{genome_name}_qseq_{idx}.fasta")
+            sseq_path = os.path.join(folder_path, f"{self.gene}_{genome_name}_sseq_{idx}.fasta")
 
-            qseq_path = os.path.join(folder_path, qseq_path)
-            sseq_path = os.path.join(folder_path, sseq_path)
             with open(qseq_path, 'w') as qf:
                 qf.write(row[17])
             with open(sseq_path, 'w') as sf:
