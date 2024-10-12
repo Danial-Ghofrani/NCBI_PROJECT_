@@ -1,5 +1,6 @@
 import os
-
+import shutil
+import patoolib
 import pandas as pd
 import mysql.connector
 from ..entity.gene import *
@@ -298,3 +299,22 @@ class DB:
                             outfile.write(new_header + '\n')
                         else:
                             outfile.write(line)
+
+
+
+    def move_files_to_results(self, source_folder, destination_folder, exclude_items):
+
+        os.makedirs(destination_folder, exist_ok=True)
+
+        for item in os.listdir(source_folder):
+            item_path = os.path.join(source_folder, item)
+
+            if item in exclude_items or item.startswith('WGS'):
+                continue
+
+            shutil.move(item_path, destination_folder)
+
+    def create_rar_from_folder(self, folder_path, rar_file_name):
+        patoolib.create_archive(rar_file_name, [folder_path])
+
+
