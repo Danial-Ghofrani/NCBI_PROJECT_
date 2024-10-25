@@ -300,21 +300,26 @@ class DB:
                         else:
                             outfile.write(line)
 
-
-
     def move_files_to_results(self, source_folder, destination_folder, exclude_items):
-
+        # Ensure destination folder exists
         os.makedirs(destination_folder, exist_ok=True)
 
         for item in os.listdir(source_folder):
             item_path = os.path.join(source_folder, item)
+            dest_path = os.path.join(destination_folder, item)
 
-            if item in exclude_items or item.startswith('WGS'):
+            # Skip excluded items or items starting with 'WGS'
+            if item in exclude_items or item.startswith('WGS') or item.endswith('.csv'):
                 continue
 
+            # Delete the existing file at destination if it exists
+            if os.path.exists(dest_path):
+                os.remove(dest_path)
+
+            # Move the file
             shutil.move(item_path, destination_folder)
+            print(f"Replaced existing file and moved {item} to {destination_folder}")
+
 
     def create_rar_from_folder(self, folder_path, rar_file_name):
         patoolib.create_archive(rar_file_name, [folder_path])
-
-

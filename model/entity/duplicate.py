@@ -61,16 +61,16 @@ class DuplicateCheck:
         sequences = self.cursor.fetchall()
         return sequences
 
-    # def clean_fasta(self, file_path):
-    #     with open(file_path, 'r') as file:
-    #         lines = file.readlines()
-    #
-    #     with open(file_path, 'w') as file:
-    #         for line in lines:
-    #             if line.startswith('>'):
-    #                 file.write(line)
-    #             else:
-    #                 file.write(line.replace('-', ''))
+    def clean_fasta(self, file_path):
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+
+        with open(file_path, 'w') as file:
+            for line in lines:
+                if line.startswith('>'):
+                    file.write(line)
+                else:
+                    file.write(line.replace('-', ''))
 
     def blast_sequences(self, seq1_path, seq2_path):
         # Clean the FASTA files

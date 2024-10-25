@@ -46,7 +46,7 @@ for gene in genes_list:
 
 source_folder = r"D:\programming\NCBI_PROJECT_"
 destination_folder = r"D:\programming\NCBI_PROJECT_\results"
-exclude_items = ["wgs", "model", "concatenate", ".git", ".idea", "main.py"]
+exclude_items = ["combined_wgs.fasta", "wgs", "model", "concatenate", ".git", ".idea", "main.py"]
 rar_file_name = 'D:/programming/NCBI_PROJECT_/results.rar'
 
 
