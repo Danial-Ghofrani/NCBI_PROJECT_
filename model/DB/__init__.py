@@ -17,6 +17,8 @@ def get_files(folder_path):
 
 
 
+
+
 def process_files_to_fasta(folder_path):
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
@@ -38,8 +40,6 @@ def process_files_to_fasta(folder_path):
 
 
 
-
-
 def clean_fasta_sequence(folder_path):
     for filename in os.listdir(folder_path):
         if filename.endswith(".fasta"):
@@ -48,37 +48,23 @@ def clean_fasta_sequence(folder_path):
             with open(file_path, "r") as file:
                 fasta_string = file.read()
 
-            lines = fasta_string.strip().split("\n")
+            # Find the position of the last '>'
+            last_header_index = fasta_string.rfind(">")
 
-            headers = []
-            sequence = []
+            if last_header_index == -1:
+                print(f"No header found in {file_path}")
+                continue
 
-            for line in lines:
-                if ">" in line:
-                    # Remove anything before '>' and strip the line
-                    clean_header = line[line.find(">"):].strip()
-                    headers.append(clean_header)
-                else:
-                    sequence.append(line)
+            # Preserve the content from the last header onwards
+            clean_fasta_content = fasta_string[last_header_index:]
 
-            sequence = "".join(sequence).upper()
-
-            if not re.match("^[ATCGN]*$", sequence):
-                print(f"Invalid FASTA format in {file_path}: Sequence contains invalid characters")
-
-            corrected_sequence = re.sub("[^ATCGN]", "", sequence)
-
-            corrected_fasta = "\n".join(headers) + "\n" + corrected_sequence
-
-            # Save the cleaned sequence back to the file
+            # Save the cleaned content back to the file
             with open(file_path, "w") as file:
-                file.write(corrected_fasta)
+                file.write(clean_fasta_content)
 
             print(f"Cleaned sequence saved to {file_path}")
 
 
-
-# Function to connect to MySQL and create table
 def create_table_and_insert_data(folder_paths):
     try:
         # Connect to MySQL database
