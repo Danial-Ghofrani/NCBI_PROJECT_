@@ -40,12 +40,16 @@ def process_files_to_fasta(folder_path):
 
 
 
+import os
+
 def clean_fasta_sequence(folder_path):
     for filename in os.listdir(folder_path):
         if filename.endswith(".fasta"):
             file_path = os.path.join(folder_path, filename)
             print(f"Processing file: {file_path}")  # Debugging line
-            with open(file_path, "r") as file:
+
+            # Read the file with UTF-8 encoding to avoid unexpected characters
+            with open(file_path, "r", encoding="utf-8") as file:
                 fasta_string = file.read()
 
             # Find the position of the last '>'
@@ -56,13 +60,16 @@ def clean_fasta_sequence(folder_path):
                 continue
 
             # Preserve the content from the last header onwards
-            clean_fasta_content = fasta_string[last_header_index:]
+            clean_fasta_content = fasta_string[last_header_index:].replace("\\", "").replace("}", "").replace("{", "")
 
-            # Save the cleaned content back to the file
-            with open(file_path, "w") as file:
+            # Save the cleaned content back to the file with the correct line endings
+            with open(file_path, "w", encoding="utf-8", newline='') as file:
                 file.write(clean_fasta_content)
 
             print(f"Cleaned sequence saved to {file_path}")
+
+
+
 
 
 def create_table_and_insert_data(folder_paths):
