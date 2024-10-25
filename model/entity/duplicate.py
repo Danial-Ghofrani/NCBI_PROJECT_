@@ -74,8 +74,8 @@ class DuplicateCheck:
 
     def blast_sequences(self, seq1_path, seq2_path):
         # Clean the FASTA files
-        # self.clean_fasta(seq1_path)
-        # self.clean_fasta(seq2_path)
+        self.clean_fasta(seq1_path)
+        self.clean_fasta(seq2_path)
 
         # Check if sequence files exist and have content
         if not os.path.isfile(seq1_path) or not os.path.isfile(seq2_path):
