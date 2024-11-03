@@ -41,8 +41,8 @@ for gene in genes_list:
     analysis = Analysis(db_info)
     analysis.process_analysis(['gene_analysis.xlsx', 'genome_gene.xlsx'])
     db.export_table(gene.name, gene.name, 'excel')
-
-
+    db.organize_sequences_by_cutoff(gene.name)
+    db.organize_sequences_by_duplicate(gene.name)
 
 source_folder = r"D:\programming\NCBI_PROJECT_"
 destination_folder = r"D:\programming\NCBI_PROJECT_\results"

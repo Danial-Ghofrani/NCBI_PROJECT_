@@ -303,8 +303,7 @@ class DB:
                         else:
                             outfile.write(line)
 
-    import os
-    import shutil
+
 
     def organize_sequences_by_cutoff(self, table_name):
         """
@@ -362,49 +361,61 @@ class DB:
         print("Sequences organized by cutoff value.")
 
 
-    def organize_sequences_by_cutoff_and_duplicate(self, table_name):
+
+    def organize_sequences_by_duplicate(self, table_name):
         """
-        Organizes sequence files from the cutoff_1 folder into a new folder based on the duplicate column.
+        Organizes sequence files based only on the duplicate column.
         This function should be called after the duplicate column has been populated.
         """
         self.connect()
 
         # Define folders
         base_folder = f"{self.gene}_seq_folder"
-        cutoff_folder = os.path.join(base_folder, "cutoff_1")
-        cutoff_duplicate_folder = os.path.join(base_folder, "cutoff_1_duplicate_1")
+        duplicate_folder = os.path.join(base_folder, "duplicate_1")
 
-        os.makedirs(cutoff_duplicate_folder, exist_ok=True)
+        os.makedirs(duplicate_folder, exist_ok=True)
 
         # Fetch all records from the database
         query = f"""
             SELECT id, query_id, genome_name, qseq_path, sseq_path, duplicate
-            FROM {table_name}
-            WHERE cutoff = 1;  # Only retrieve records where cutoff is already 1
+            FROM {table_name};
         """
         self.cursor.execute(query)
         records = self.cursor.fetchall()
 
-        # Step 1: Copy files from cutoff_1 to cutoff_1_duplicate_1 if duplicate == 1
+        # Step 1: Copy all sequence files to duplicate_folder
+        for record in records:
+            _, _, _, qseq_path, sseq_path, _ = record
+
+            # Paths for copying
+            base_qseq_path = os.path.join(base_folder, os.path.basename(qseq_path))
+            base_sseq_path = os.path.join(base_folder, os.path.basename(sseq_path))
+
+            # Destination paths in the duplicate_folder
+            duplicate_qseq_path = os.path.join(duplicate_folder, os.path.basename(qseq_path))
+            duplicate_sseq_path = os.path.join(duplicate_folder, os.path.basename(sseq_path))
+
+            # Copy files if they exist in the base folder
+            if os.path.exists(base_qseq_path):
+                shutil.copy(base_qseq_path, duplicate_qseq_path)
+            if os.path.exists(base_sseq_path):
+                shutil.copy(base_sseq_path, duplicate_sseq_path)
+
+        # Step 2: Remove files from duplicate_folder if duplicate != 1
         for record in records:
             _, _, _, qseq_path, sseq_path, duplicate = record
 
-            # Destination paths in the cutoff_duplicate_folder
-            cutoff_dup_qseq_path = os.path.join(cutoff_duplicate_folder, os.path.basename(qseq_path))
-            cutoff_dup_sseq_path = os.path.join(cutoff_duplicate_folder, os.path.basename(sseq_path))
-
-            # Only copy files if duplicate == 1
-            if duplicate == 1:
-                cutoff_qseq_path = os.path.join(cutoff_folder, os.path.basename(qseq_path))
-                cutoff_sseq_path = os.path.join(cutoff_folder, os.path.basename(sseq_path))
-
-                if os.path.exists(cutoff_qseq_path):
-                    shutil.copy(cutoff_qseq_path, cutoff_dup_qseq_path)
-                if os.path.exists(cutoff_sseq_path):
-                    shutil.copy(cutoff_sseq_path, cutoff_dup_sseq_path)
+            if duplicate != 1:
+                # Remove files from duplicate_folder if duplicate != 1
+                duplicate_qseq_path = os.path.join(duplicate_folder, os.path.basename(qseq_path))
+                duplicate_sseq_path = os.path.join(duplicate_folder, os.path.basename(sseq_path))
+                if os.path.exists(duplicate_qseq_path):
+                    os.remove(duplicate_qseq_path)
+                if os.path.exists(duplicate_sseq_path):
+                    os.remove(duplicate_sseq_path)
 
         self.disconnect()
-        print("Sequences organized by cutoff and duplicate values.")
+        print("Sequences organized by duplicate value (duplicate = 1).")
 
 
     def move_files_to_results(self, source_folder, destination_folder, exclude_items):
