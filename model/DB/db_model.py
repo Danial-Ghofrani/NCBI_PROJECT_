@@ -306,10 +306,7 @@ class DB:
 
 
     def organize_sequences_by_cutoff(self, table_name):
-        """
-        Organizes sequence files based only on the cutoff column.
-        This function should be called after the cutoff column has been populated.
-        """
+
         self.connect()
 
         # Define folders
@@ -361,12 +358,7 @@ class DB:
         print("Sequences organized by cutoff value.")
 
 
-
     def organize_sequences_by_duplicate(self, table_name):
-        """
-        Organizes sequence files based only on the duplicate column.
-        This function should be called after the duplicate column has been populated.
-        """
         self.connect()
 
         # Define folders
@@ -385,7 +377,10 @@ class DB:
 
         # Step 1: Copy all sequence files to duplicate_folder
         for record in records:
-            _, _, _, qseq_path, sseq_path, _ = record
+            _, _, _, qseq_path, sseq_path, duplicate = record
+
+            # Debugging: print duplicate value
+            print(f"Processing record with duplicate={duplicate}")
 
             # Paths for copying
             base_qseq_path = os.path.join(base_folder, os.path.basename(qseq_path))
@@ -401,22 +396,22 @@ class DB:
             if os.path.exists(base_sseq_path):
                 shutil.copy(base_sseq_path, duplicate_sseq_path)
 
-        # Step 2: Remove files from duplicate_folder if duplicate != 1
+        # Step 2: Remove files from duplicate_folder if duplicate is not 1
         for record in records:
             _, _, _, qseq_path, sseq_path, duplicate = record
 
-            if duplicate != 1:
-                # Remove files from duplicate_folder if duplicate != 1
+            # Only remove if duplicate is not 1 and is not NULL
+            if duplicate is not None and duplicate != 1:
                 duplicate_qseq_path = os.path.join(duplicate_folder, os.path.basename(qseq_path))
                 duplicate_sseq_path = os.path.join(duplicate_folder, os.path.basename(sseq_path))
+
                 if os.path.exists(duplicate_qseq_path):
                     os.remove(duplicate_qseq_path)
                 if os.path.exists(duplicate_sseq_path):
                     os.remove(duplicate_sseq_path)
 
         self.disconnect()
-        print("Sequences organized by duplicate value (duplicate = 1).")
-
+        print("Sequences organized by duplicate value.")
 
     def move_files_to_results(self, source_folder, destination_folder, exclude_items):
         # Ensure destination folder exists
