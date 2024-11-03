@@ -40,7 +40,6 @@ def process_files_to_fasta(folder_path):
 
 
 
-import os
 
 def clean_fasta_sequence(folder_path):
     for filename in os.listdir(folder_path):
@@ -67,8 +66,6 @@ def clean_fasta_sequence(folder_path):
                 file.write(clean_fasta_content)
 
             print(f"Cleaned sequence saved to {file_path}")
-
-
 
 
 
@@ -152,8 +149,7 @@ gene_sample_path = r'C:\Users\Danial\Desktop\genes'
 genome_sample_path = r'C:\Users\Danial\Desktop\wgs'
 
 process_files_to_fasta(gene_sample_path)
-process_files_to_fasta(genome_sample_path)
+# process_files_to_fasta(genome_sample_path)
 clean_fasta_sequence(gene_sample_path)
-# clean_fasta_sequence(genome_sample_path)
 
 create_table_and_insert_data([gene_sample_path, genome_sample_path])
