@@ -26,6 +26,7 @@ class DB:
         except mysql.connector.Error as err:
             print(f"Error: {err}")
 
+
     def disconnect(self, commit=False):
         if commit:
             self.mydb.commit()
@@ -37,8 +38,6 @@ class DB:
         result = self.cursor.fetchone()
         return result is not None
 
-    import os
-    import pandas as pd
 
     def create_and_insert_blast_results(self, table_name, csv_file):
         self.connect()
@@ -52,7 +51,7 @@ class DB:
         # Define table columns and types
         columns = '''
             id INT AUTO_INCREMENT PRIMARY KEY,
-            query_id NVARCHAR(100),
+            query_id NVARCHAR(100),1
             genome_name NVARCHAR(100),
             subject_id VARCHAR(100),
             identity FLOAT,
@@ -357,61 +356,68 @@ class DB:
         self.disconnect()
         print("Sequences organized by cutoff value.")
 
+    # def organize_sequences_by_duplicate(self, table_name):
+    #
+    #     self.connect()
+    #
+    #     # Replace NULL values in the duplicate column with 0
+    #     update_query = f"""
+    #         UPDATE {table_name}
+    #         SET duplicate = 0
+    #         WHERE duplicate IS NULL;
+    #     """
+    #     self.mydb.execute(update_query)  # Use self.mydb if it holds the connection
+    #     self.mydb.commit()
+    #
+    #     # Define folders
+    #     base_folder = f"{self.gene}_seq_folder"
+    #     duplicate_folder = os.path.join(base_folder, "duplicate_1")
+    #
+    #     os.makedirs(duplicate_folder, exist_ok=True)
+    #
+    #     # Fetch all records from the database
+    #     query = f"""
+    #         SELECT id, query_id, genome_name, qseq_path, sseq_path, duplicate
+    #         FROM {table_name};
+    #     """
+    #     self.cursor.execute(query)
+    #     records = self.cursor.fetchall()
+    #
+    #     # Step 1: Copy all sequence files to duplicate_folder
+    #     for record in records:
+    #         _, _, _, qseq_path, sseq_path, _ = record
+    #
+    #         # Paths for copying
+    #         base_qseq_path = os.path.join(base_folder, os.path.basename(qseq_path))
+    #         base_sseq_path = os.path.join(base_folder, os.path.basename(sseq_path))
+    #
+    #         # Destination paths in the duplicate_folder
+    #         duplicate_qseq_path = os.path.join(duplicate_folder, os.path.basename(qseq_path))
+    #         duplicate_sseq_path = os.path.join(duplicate_folder, os.path.basename(sseq_path))
+    #
+    #         # Copy files if they exist in the base folder
+    #         if os.path.exists(base_qseq_path):
+    #             shutil.copy(base_qseq_path, duplicate_qseq_path)
+    #         if os.path.exists(base_sseq_path):
+    #             shutil.copy(base_sseq_path, duplicate_sseq_path)
+    #
+    #     # Step 2: Remove files from duplicate_folder if duplicate != 1
+    #     for record in records:
+    #         _, _, _, qseq_path, sseq_path, duplicate = record
+    #
+    #         if duplicate != 1:
+    #             # Remove files from duplicate_folder if duplicate != 1
+    #             duplicate_qseq_path = os.path.join(duplicate_folder, os.path.basename(qseq_path))
+    #             duplicate_sseq_path = os.path.join(duplicate_folder, os.path.basename(sseq_path))
+    #             if os.path.exists(duplicate_qseq_path):
+    #                 os.remove(duplicate_qseq_path)
+    #             if os.path.exists(duplicate_sseq_path):
+    #                 os.remove(duplicate_sseq_path)
+    #
+    #     self.disconnect()
+    #     print("Sequences organized by duplicate value.")
 
-    def organize_sequences_by_duplicate(self, table_name):
-        self.connect()
 
-        # Define folders
-        base_folder = f"{self.gene}_seq_folder"
-        duplicate_folder = os.path.join(base_folder, "duplicate_1")
-
-        os.makedirs(duplicate_folder, exist_ok=True)
-
-        # Fetch all records from the database
-        query = f"""
-            SELECT id, query_id, genome_name, qseq_path, sseq_path, duplicate
-            FROM {table_name};
-        """
-        self.cursor.execute(query)
-        records = self.cursor.fetchall()
-
-        # Step 1: Copy all sequence files to duplicate_folder
-        for record in records:
-            _, _, _, qseq_path, sseq_path, duplicate = record
-
-            # Debugging: print duplicate value
-            print(f"Processing record with duplicate={duplicate}")
-
-            # Paths for copying
-            base_qseq_path = os.path.join(base_folder, os.path.basename(qseq_path))
-            base_sseq_path = os.path.join(base_folder, os.path.basename(sseq_path))
-
-            # Destination paths in the duplicate_folder
-            duplicate_qseq_path = os.path.join(duplicate_folder, os.path.basename(qseq_path))
-            duplicate_sseq_path = os.path.join(duplicate_folder, os.path.basename(sseq_path))
-
-            # Copy files if they exist in the base folder
-            if os.path.exists(base_qseq_path):
-                shutil.copy(base_qseq_path, duplicate_qseq_path)
-            if os.path.exists(base_sseq_path):
-                shutil.copy(base_sseq_path, duplicate_sseq_path)
-
-        # Step 2: Remove files from duplicate_folder if duplicate is not 1
-        for record in records:
-            _, _, _, qseq_path, sseq_path, duplicate = record
-
-            # Only remove if duplicate is not 1 and is not NULL
-            if duplicate is not None and duplicate != 1:
-                duplicate_qseq_path = os.path.join(duplicate_folder, os.path.basename(qseq_path))
-                duplicate_sseq_path = os.path.join(duplicate_folder, os.path.basename(sseq_path))
-
-                if os.path.exists(duplicate_qseq_path):
-                    os.remove(duplicate_qseq_path)
-                if os.path.exists(duplicate_sseq_path):
-                    os.remove(duplicate_sseq_path)
-
-        self.disconnect()
-        print("Sequences organized by duplicate value.")
 
     def move_files_to_results(self, source_folder, destination_folder, exclude_items):
         # Ensure destination folder exists
